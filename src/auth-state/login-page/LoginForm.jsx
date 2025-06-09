@@ -1,5 +1,6 @@
 import { useReducer } from "react"
 import { motion } from "framer-motion"
+import api from "../../axios"
 
 const initialState = {
     username: '', 
@@ -34,9 +35,18 @@ const LoginForm = ({onSwitchToSignup}) => {
             value: e.target.value,
         });
     };
-    const handleSubmit = (e) =>{
+    const handleSubmit = async (e) =>{
         e.preventDefault();
-        dispatch({type: "RESET"});
+        try {
+            const response = await api.post('/login/', {
+                username: loginstate.username,
+                password: loginstate.password
+            });
+
+            dispatch({type: "RESET"});
+        } catch (err) {
+            console.log('Login error:', err)
+        }
     };
 
     return (
