@@ -1,5 +1,6 @@
-import { useReducer } from "react"
+import { useReducer, useState } from "react"
 import { motion } from "framer-motion";
+import api from "../../axios";
 
 const initialState = {
     email: '',
@@ -19,6 +20,7 @@ const signUpReducer = (state, action) => {
 
 const SignUp = ({onSwitchToLogin})=>{
     const [signupstate, dispatch] = useReducer(signUpReducer, initialState)
+    const [error, setError] = useState({type: null, message: ''});
     const handleChange = (e)=>{
        dispatch({
         type: "UPDATE_FIELD",
@@ -26,12 +28,32 @@ const SignUp = ({onSwitchToLogin})=>{
         value: e.target.value,
     }) 
     }
-    const handleSubmit = (e) =>{
+    const handleSubmit =async (e) =>{
+        
         e.preventDefault()
-        dispatch({
-            type: "RESET"
-        })
-    }
+        setError({type: null, message: ''})
+        if(signupstate.password !== signupstate.confirmpassword){
+            setError({
+                type: 'password',
+                message: 'Passwords do not match!'
+            });
+            return;
+        }
+        try {
+            const response = await api.post('signup/', {
+                email: signupstate.email, 
+                username: signupstate.username,
+                password: signupstate.password
+            });
+            dispatch({type: "RESET"})
+            onSwitchToLogin()
+        }catch (err){
+            setError({
+                type: 'api',
+                message: err.response?.data?.message || 'Signup failed. Please try again.' 
+            })
+        }
+    };
 
     return (
     <div className="min-h-screen flex items-center justify-center bg-[#2C3930]">
@@ -83,7 +105,8 @@ const SignUp = ({onSwitchToLogin})=>{
                 id="password"
                 value={signupstate.password}
                 onChange={handleChange}
-                className="w-full px-4 py-3 border border-[#D0B49F] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#5D9C59] focus:border-transparent bg-white/80 text-[#4A4A4A]"
+                className={`w-full px-4 py-3 border border-[#D0B49F] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#5D9C59] focus:border-transparent bg-white/80 text-[#4A4A4A]
+                    ${error.type === 'password' ? 'border-2 border-red-500': 'border border-[#D0B49]'}`}
                 placeholder="Enter a password"
                 />
             </div>
@@ -96,10 +119,18 @@ const SignUp = ({onSwitchToLogin})=>{
                 id="confirmpassword"
                 value={signupstate.confirmpassword}
                 onChange={handleChange}
-                className="w-full px-4 py-3 border border-[#D0B49F] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#5D9C59] focus:border-transparent bg-white/80 text-[#4A4A4A]"
+                className={`w-full px-4 py-3 border border-[#D0B49F] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#5D9C59] focus:border-transparent bg-white/80 text-[#4A4A4A]
+                ${error.type === 'password' ? 'border-2 border-red-500':'border border-[#D0B49F]'}`}
                 placeholder="Confirm your password"
                 />
             </div>
+            {error.type === 'password' && (
+                <p className = 'text-red-500 text-sm mb-4'>{error.message}</p>
+            )}
+
+            {error.type === 'api' && (
+                <p className="text-red-500 text-sm mb-4">{error.message}</p>
+            )}
             <button
                 type="submit"
                 className="w-full bg-[#5D9C59] text-white py-3 px-4 rounded-lg hover:bg-[#4A7A47] transition-colors duration-300 font-medium shadow-sm"

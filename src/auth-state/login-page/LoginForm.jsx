@@ -42,7 +42,6 @@ const LoginForm = ({onSwitchToSignup}) => {
                 username: loginstate.username,
                 password: loginstate.password
             });
-
             dispatch({type: "RESET"});
         } catch (err) {
             console.log('Login error:', err)
