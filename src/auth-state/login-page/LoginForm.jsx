@@ -1,6 +1,8 @@
 import { useReducer } from "react"
 import { motion } from "framer-motion"
 import api from "../../axios"
+import { useDispatch } from "react-redux"
+import { loggedIn } from "../../redux/auth-slice/authSlice"
 
 const initialState = {
     username: '', 
@@ -27,6 +29,7 @@ const loginFormReducer = (state, action) => {
 
 const LoginForm = ({onSwitchToSignup}) => {
     const [loginstate, dispatch] = useReducer(loginFormReducer, initialState);
+    const authdispatch = useDispatch()
 
     const handleChange = (e)=>{
         dispatch({
@@ -38,11 +41,14 @@ const LoginForm = ({onSwitchToSignup}) => {
     const handleSubmit = async (e) =>{
         e.preventDefault();
         try {
-            const response = await api.post('/login/', {
+            const response = await api.post('login/', {
                 username: loginstate.username,
                 password: loginstate.password
             });
+            if (response.status == 200){
+            authdispatch(loggedIn({username: loginstate.username}))
             dispatch({type: "RESET"});
+            }
         } catch (err) {
             console.log('Login error:', err)
         }
